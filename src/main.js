@@ -7,18 +7,30 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const formSearch = document.querySelector('.form');
 const imageList = document.querySelector('.gallery');
-const preload = document.querySelector('.preload');
-
+const preload = document.querySelector('.loader');
+const nextBtn = document.querySelector('#next-btn');
+let page = 0;
+let searchValue = null;
 const gallery = new SimpleLightbox('.gallery a', {
   captionsData: 'alt',
   captionDelay: 250,
 });
+const BASE_URL = 'https://pixabay.com/api';
+const searchParams = new URLSearchParams({
+  key: '41861239-c6b09579488337e808a164f07',
+  image_type: 'photo',
+  orientation: 'horizontal',
+  safesearch: 'true',
+  per_page: 40,
+});
 
 formSearch.addEventListener('submit', handleSearch);
+nextBtn.addEventListener('click', nextPage);
 
 function handleSearch(event) {
   event.preventDefault();
   const searchQuery = event.currentTarget.elements.input.value;
+  searchValue = searchQuery;
 
   imageList.innerHTML = '';
 
@@ -30,7 +42,7 @@ function handleSearch(event) {
       messageSize: '20px',
       messageColor: '#808080',
       backgroundColor: '#e7fc44',
-      position: 'topLeft',
+      position: 'topRight',
       timeout: 3000,
     });
     return;
@@ -52,33 +64,23 @@ function handleSearch(event) {
           position: 'topRight',
           timeout: 5000,
         });
+        return;
       }
+
       imageList.innerHTML = createMarkup(data.hits);
       gallery.refresh();
+      nextBtn.classList.remove('is-hidden');
     })
     .catch(handleError)
     .finally(() => preload.classList.add('is-hidden'));
 
   event.currentTarget.reset();
+  page += 1;
 }
 
-function fetchImages(value) {
-  const BASE_URL = 'https://pixabay.com/api';
-
-  const searchParams = new URLSearchParams({
-    key: '41861239-c6b09579488337e808a164f07',
-    q: value,
-    image_type: 'photo',
-    orientation: 'horizontal',
-    safesearch: 'true',
-  });
-
-  return fetch(`${BASE_URL}/?${searchParams}`).then(res => {
-    if (!res.ok) {
-      throw new Error(res.status);
-    }
-    return res.json();
-  });
+async function fetchImages(value) {
+  const res = await axios.get(`${BASE_URL}/?${searchParams}&q=${value}`);
+  return res.data;
 }
 
 function createMarkup(arr) {
@@ -128,7 +130,38 @@ function handleError(err) {
     messageSize: '16px',
     messageColor: 'white',
     backgroundColor: '#EF4040',
-    position: 'center',
+    position: 'topRight',
     timeout: 5000,
   });
+
+  nextBtn.removeEventListener('click', nextPage);
+  nextBtn.classList.add('is-hidden');
+}
+
+async function nextPage() {
+  page += 1;
+
+  const res = await axios
+    .get(`${BASE_URL}/?${searchParams}&q=${searchValue}&page=${page}`)
+    .then(data => {
+      if (page * 40 >= data.data.totalHits) {
+        nextBtn.classList.add('is-hidden');
+        iziToast.show({
+          title: '❕',
+          theme: 'dark',
+          message: "We're sorry, but you've reached the end of search results.",
+          messageSize: '16px',
+          messageColor: 'white',
+          backgroundColor: '#4e75ff',
+          position: 'topRight',
+          timeout: 5000,
+        });
+      }
+
+      const images = data.data.hits;
+
+      imageList.innerHTML += createMarkup(images);
+      gallery.refresh();
+    })
+    .catch(handleError);
 }
