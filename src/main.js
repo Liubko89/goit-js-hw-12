@@ -55,6 +55,7 @@ async function handleSearch(event) {
 
   preload.classList.remove('is-hidden');
   event.currentTarget.reset();
+
   try {
     const response = await fetchImages(searchQuery);
     if (response.hits.length === 0) {
@@ -75,6 +76,8 @@ async function handleSearch(event) {
     imageList.innerHTML = createMarkup(response.hits);
     gallery.refresh();
     nextBtn.classList.remove('is-hidden');
+
+    scrollBy();
   } catch (err) {
     handleError(err);
   } finally {
@@ -170,15 +173,28 @@ async function nextPage() {
       imageList.innerHTML += createMarkup(dataImages.hits);
       gallery.refresh();
       nextBtn.classList.add('is-hidden');
+
+      scrollBy();
+
       return;
     }
 
     imageList.innerHTML += createMarkup(dataImages.hits);
     gallery.refresh();
+
+    scrollBy();
+
     nextBtn.classList.remove('is-hidden');
   } catch (err) {
     handleError(err);
   } finally {
     preload.classList.add('is-hidden');
   }
+}
+
+function scrollBy() {
+  window.scrollBy({
+    top: 640,
+    behavior: 'smooth',
+  });
 }
