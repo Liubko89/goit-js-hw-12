@@ -104,6 +104,7 @@ img {
   color: #808080;
 }
 
+.next-btn,
 .search-btn {
   display: inline-flex;
   padding: 10px 16px;
@@ -119,6 +120,12 @@ img {
   cursor: pointer;
 }
 
+.next-btn {
+  display: block;
+  margin: 0 auto;
+}
+
+.next-btn:hover,
 .search-btn:hover {
   background-color: #6c8cff;
 }
