@@ -18,24 +18,19 @@ const gallery = new SimpleLightbox('.gallery a', {
   captionDelay: 250,
 });
 
-const BASE_URL = 'https://pixabay.com/api';
-const searchParams = new URLSearchParams({
-  key: '41861239-c6b09579488337e808a164f07',
-  image_type: 'photo',
-  orientation: 'horizontal',
-  safesearch: 'true',
-  per_page: 40,
-});
-
 formSearch.addEventListener('submit', handleSearch);
 nextBtn.addEventListener('click', nextPage);
 
 async function handleSearch(event) {
   event.preventDefault();
+
   const searchQuery = event.currentTarget.elements.input.value;
+
   searchValue = searchQuery;
   page = 1;
+
   nextBtn.classList.add('is-hidden');
+  const form = event.currentTarget;
 
   imageList.innerHTML = '';
 
@@ -54,10 +49,9 @@ async function handleSearch(event) {
   }
 
   preload.classList.remove('is-hidden');
-  event.currentTarget.reset();
 
   try {
-    const response = await fetchImages(searchQuery);
+    const response = await fetchImages();
     if (response.hits.length === 0) {
       iziToast.show({
         iconUrl: icon,
@@ -70,14 +64,19 @@ async function handleSearch(event) {
         position: 'topRight',
         timeout: 5000,
       });
+      form.reset();
       return;
     }
 
     imageList.innerHTML = createMarkup(response.hits);
     gallery.refresh();
-    nextBtn.classList.remove('is-hidden');
+
+    if (response.hits.length >= 40) {
+      nextBtn.classList.remove('is-hidden');
+    }
 
     scrollBy();
+    form.reset();
   } catch (err) {
     handleError(err);
   } finally {
@@ -85,9 +84,17 @@ async function handleSearch(event) {
   }
 }
 
-async function fetchImages(value) {
+async function fetchImages() {
+  const BASE_URL = 'https://pixabay.com/api';
+  const searchParams = new URLSearchParams({
+    key: '41861239-c6b09579488337e808a164f07',
+    image_type: 'photo',
+    orientation: 'horizontal',
+    safesearch: 'true',
+    per_page: 40,
+  });
   const res = await axios.get(
-    `${BASE_URL}/?${searchParams}&q=${value}&page=${page}`
+    `${BASE_URL}/?${searchParams}&q=${searchValue}&page=${page}`
   );
   return res.data;
 }
@@ -153,13 +160,9 @@ async function nextPage() {
   page += 1;
 
   try {
-    const res = await axios.get(
-      `${BASE_URL}/?${searchParams}&q=${searchValue}&page=${page}`
-    );
+    const res = await fetchImages();
 
-    const dataImages = res.data;
-
-    if (page * 40 >= dataImages.totalHits) {
+    if (page * 40 >= res.totalHits) {
       iziToast.show({
         title: '❕',
         theme: 'dark',
@@ -170,7 +173,7 @@ async function nextPage() {
         position: 'topRight',
         timeout: 5000,
       });
-      imageList.innerHTML += createMarkup(dataImages.hits);
+      imageList.innerHTML += createMarkup(res.hits);
       gallery.refresh();
       nextBtn.classList.add('is-hidden');
 
@@ -179,7 +182,7 @@ async function nextPage() {
       return;
     }
 
-    imageList.innerHTML += createMarkup(dataImages.hits);
+    imageList.innerHTML += createMarkup(res.hits);
     gallery.refresh();
 
     scrollBy();
