@@ -5,36 +5,37 @@ import icon from '../src/img/octagon.svg';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const formSearch = document.querySelector('.form');
-const imageList = document.querySelector('.gallery');
-const preload = document.querySelector('.loader');
-const nextBtn = document.querySelector('#next-btn');
+const params = {
+  formSearch: document.querySelector('.form'),
+  imageList: document.querySelector('.gallery'),
+  preload: document.querySelector('.loader'),
+  nextBtn: document.querySelector('#next-btn'),
+};
 
+const hiddenClass = 'is-hidden';
 let page = 0;
-let searchValue = null;
+let searchValue = '';
 
 const gallery = new SimpleLightbox('.gallery a', {
   captionsData: 'alt',
   captionDelay: 250,
 });
 
-formSearch.addEventListener('submit', handleSearch);
-nextBtn.addEventListener('click', nextPage);
+params.formSearch.addEventListener('submit', handleSearch);
 
 async function handleSearch(event) {
   event.preventDefault();
 
-  const searchQuery = event.currentTarget.elements.input.value;
+  const searchQuery = event.currentTarget.elements.input.value.trim();
+  const form = event.currentTarget;
 
   searchValue = searchQuery;
   page = 1;
 
-  nextBtn.classList.add('is-hidden');
-  const form = event.currentTarget;
+  params.nextBtn.classList.add(hiddenClass);
+  params.imageList.innerHTML = '';
 
-  imageList.innerHTML = '';
-
-  if (!searchQuery.trim()) {
+  if (!searchQuery) {
     iziToast.show({
       title: '❕',
       theme: 'light',
@@ -48,7 +49,7 @@ async function handleSearch(event) {
     return;
   }
 
-  preload.classList.remove('is-hidden');
+  params.preload.classList.remove(hiddenClass);
 
   try {
     const response = await fetchImages();
@@ -68,11 +69,11 @@ async function handleSearch(event) {
       return;
     }
 
-    imageList.innerHTML = createMarkup(response.hits);
+    params.imageList.innerHTML = createMarkup(response.hits);
     gallery.refresh();
 
     if (response.hits.length >= 40) {
-      nextBtn.classList.remove('is-hidden');
+      addNextPageBtn();
     }
 
     scrollBy();
@@ -80,7 +81,7 @@ async function handleSearch(event) {
   } catch (err) {
     handleError(err);
   } finally {
-    preload.classList.add('is-hidden');
+    params.preload.classList.add(hiddenClass);
   }
 }
 
@@ -112,33 +113,35 @@ function createMarkup(arr) {
         downloads,
       }) =>
         `<li class="gallery-item">
-        <a class="gallery-link" href="${largeImageURL}">
-           <img
-            class="gallery-image"
-            src="${webformatURL}"
-            alt="${tags}"
-          />
-        </a>
-        <div class="container-additional-info">
-        <div class="container-descr-inner"><p class="description">Likes</p><span class="description-value">${likes}</span></div>
-        
-        <div class="container-descr-inner"><p class="description">Views</p><span class="description-value">${views}</span></div>
-        
-
-        <div class="container-descr-inner"><p class="description">Comments</p><span class="description-value">${comments}</span></div>
-        
-
-        <div class="container-descr-inner"><p class="description">Downloads</p><span class="description-value">${downloads}</span></div>
-        
+      <a class="gallery-link" href="${largeImageURL}">
+        <img class="gallery-image" src="${webformatURL}" alt="${tags}" />
+      </a>
+      <div class="container-additional-info">
+        <div class="container-descr-inner">
+          <p class="description">Likes</p>
+          <span class="description-value">${likes}</span>
         </div>
-      </li>`
+        <div class="container-descr-inner">
+          <p class="description">Views</p>
+          <span class="description-value">${views}</span>
+        </div>
+        <div class="container-descr-inner">
+          <p class="description">Comments</p>
+          <span class="description-value">${comments}</span>
+        </div>
+        <div class="container-descr-inner">
+          <p class="description">Downloads</p>
+          <span class="description-value">${downloads}</span>
+        </div>
+      </div>
+    </li>`
     )
     .join('');
 }
 
 function handleError(err) {
   console.error(err);
-  imageList.innerHTML = '';
+  params.imageList.innerHTML = '';
   iziToast.show({
     iconUrl: icon,
     theme: 'dark',
@@ -150,13 +153,12 @@ function handleError(err) {
     timeout: 5000,
   });
 
-  nextBtn.removeEventListener('click', nextPage);
-  nextBtn.classList.add('is-hidden');
+  removeNextPageBtn();
 }
 
 async function nextPage() {
-  preload.classList.remove('is-hidden');
-  nextBtn.classList.add('is-hidden');
+  params.preload.classList.remove(hiddenClass);
+  removeNextPageBtn();
   page += 1;
 
   try {
@@ -173,25 +175,25 @@ async function nextPage() {
         position: 'topRight',
         timeout: 5000,
       });
-      imageList.innerHTML += createMarkup(res.hits);
+      params.imageList.innerHTML += createMarkup(res.hits);
       gallery.refresh();
-      nextBtn.classList.add('is-hidden');
+      removeNextPageBtn();
 
       scrollBy();
 
       return;
     }
 
-    imageList.innerHTML += createMarkup(res.hits);
+    params.imageList.innerHTML += createMarkup(res.hits);
     gallery.refresh();
 
     scrollBy();
 
-    nextBtn.classList.remove('is-hidden');
+    addNextPageBtn();
   } catch (err) {
     handleError(err);
   } finally {
-    preload.classList.add('is-hidden');
+    params.preload.classList.add(hiddenClass);
   }
 }
 
@@ -200,4 +202,14 @@ function scrollBy() {
     top: 640,
     behavior: 'smooth',
   });
+}
+
+function addNextPageBtn() {
+  params.nextBtn.classList.remove(hiddenClass);
+  params.nextBtn.addEventListener('click', nextPage);
+}
+
+function removeNextPageBtn() {
+  params.nextBtn.classList.add(hiddenClass);
+  params.nextBtn.removeEventListener('click', nextPage);
 }
