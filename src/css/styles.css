@@ -4,13 +4,19 @@
 
 body {
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px 12px;
   font-family: 'Montserrat', sans-serif;
   font-style: normal;
   font-weight: 400;
   line-height: 1.5;
   letter-spacing: 0.04em;
-  width: 1440px;
+  background-color: rgba(128, 128, 128, 0.5);
+  max-width: 1524px;
+  background-image: url(../img/omar-ram.jpg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 a {
@@ -26,38 +32,47 @@ p {
   margin: 0 0 40px 0;
   padding-left: 0;
   list-style-type: none;
-  padding: 24px 120px;
-  justify-content: center;
+  padding: 12px;
   display: flex;
-  gap: 24px;
+  justify-content: center;
+  gap: 12px;
   flex-wrap: wrap;
   margin-left: auto;
   margin-right: auto;
-  flex-basis: calc((100% - 2 * 24) / 3);
+  scroll-behavior: smooth;
 }
 
-.gallery > li > a {
+.gallery-item {
+  width: 100%;
+  max-width: 360px;
+  box-shadow: rgba(16, 236, 0, 1) 0px 1px 2px 1px;
+}
+
+.gallery-link {
   position: relative;
   display: block;
-  width: 360px;
+  overflow: hidden;
+  width: 100%;
   height: 200px;
   cursor: pointer;
+  transition-duration: 300ms;
 }
 
-a:hover > img {
-  width: 376px;
-  height: 208px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
-img {
+.gallery-image {
   display: block;
   object-fit: cover;
   width: 100%;
   height: 100%;
+  transition: width 300ms ease-in-out, height 300ms ease-in-out;
+}
+
+.gallery-link:hover > .gallery-image {
+  width: 105%;
+  height: 105%;
+}
+
+.gallery-link:hover + .container-additional-info {
+  box-shadow: rgba(4, 255, 33, 0.96) 0px 30px 30px -12px inset;
 }
 
 .basicLightbox {
@@ -80,6 +95,12 @@ img {
   justify-content: center;
   align-items: center;
   gap: 12px;
+}
+
+@media screen and (max-width: 767px) {
+  .form {
+    flex-direction: column;
+  }
 }
 
 .input {
@@ -137,7 +158,13 @@ img {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  border: 0.02px solid #4e75ff;
+  transition: box-shadow 300ms ease-in-out;
+}
+
+@media screen and (max-width: 420px) {
+  .container-additional-info {
+    font-size: 14px;
+  }
 }
 
 .container-descr-inner {
@@ -152,12 +179,6 @@ img {
 
 .description-value {
   text-align: center;
-}
-
-.is-hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
 }
 
 .loader {
@@ -204,6 +225,7 @@ img {
     bottom: 140px;
   }
 }
+
 @keyframes loading-step {
   0% {
     box-shadow: 0 10px 0 rgba(0, 0, 0, 0), 0 10px 0 #4e75ff,
@@ -213,4 +235,25 @@ img {
     box-shadow: 0 10px 0 #4e75ff, -35px 50px 0 #4e75ff, -70px 90px 0 #4e75ff,
       -70px 90px 0 rgba(0, 0, 0, 0);
   }
+}
+
+.is-hidden {
+  display: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  border: 0;
+  padding: 0;
+
+  white-space: nowrap;
+  clip-path: inset(100%);
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+
+  outline: 0;
+  outline-offset: 0;
 }
